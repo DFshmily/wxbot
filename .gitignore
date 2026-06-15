@@ -7,3 +7,4 @@ data/
 .venv/
 .DS_Store
 📘 微信群AI机器人系统开发文档（WeChatFerry + DeepSeek + Node版）.md
+.claude/
