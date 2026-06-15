@@ -1,0 +1,9 @@
+node_modules/
+.env
+__pycache__/
+*.pyc
+data/
+*.db
+.venv/
+.DS_Store
+📘 微信群AI机器人系统开发文档（WeChatFerry + DeepSeek + Node版）.md
