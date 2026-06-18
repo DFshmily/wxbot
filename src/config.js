@@ -10,13 +10,26 @@ function floatEnv(key, def) {
   return isNaN(v) ? def : v;
 }
 
+// LLM provider 配置 — 支持 deepseek / mimo
+const provider = (process.env.LLM_PROVIDER || 'deepseek').toLowerCase();
+
+const PROVIDER_DEFAULTS = {
+  deepseek: { baseURL: 'https://api.deepseek.com', model: 'deepseek-chat' },
+  mimo:     { baseURL: 'https://token-plan-cn.xiaomimimo.com/v1', model: 'mimo-v2.5-pro' },
+};
+
+const defaults = PROVIDER_DEFAULTS[provider] || PROVIDER_DEFAULTS.deepseek;
+
 export default {
-  // DeepSeek
-  deepseek: {
-    apiKey: process.env.DEEPSEEK_API_KEY || '',
-    model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
-    baseURL: 'https://api.deepseek.com',
+  // LLM
+  llm: {
+    provider,
+    apiKey: process.env.LLM_API_KEY || process.env.DEEPSEEK_API_KEY || '',
+    model: process.env.LLM_MODEL || process.env.DEEPSEEK_MODEL || defaults.model,
+    baseURL: process.env.LLM_BASE_URL || defaults.baseURL,
   },
+  // 保留 deepseek 别名，兼容旧代码
+  get deepseek() { return this.llm; },
 
   // Risk control
   risk: {
@@ -40,5 +53,22 @@ export default {
   // Summary schedule (default 23:50)
   summary: {
     cron: process.env.SUMMARY_CRON || '50 23 * * *',
+  },
+
+  // Web management server
+  web: {
+    port: intEnv('WEB_PORT', 3080),
+    jwtSecret: process.env.JWT_SECRET || 'wxbot-default-secret-change-me',
+    jwtExpireHours: intEnv('JWT_EXPIRE_HOURS', 24),
+    adminUser: process.env.ADMIN_USERNAME || 'admin',
+    adminPassword: process.env.ADMIN_PASSWORD || 'admin123',
+    localAuthBypass: process.env.LOCAL_AUTH_BYPASS !== 'false',
+  },
+
+  // Watchdog
+  watchdog: {
+    enabled: process.env.WATCHDOG_ENABLED !== 'false',
+    checkInterval: intEnv('WATCHDOG_CHECK_INTERVAL', 30),
+    maxFailures: intEnv('WATCHDOG_MAX_FAILURES', 3),
   },
 };

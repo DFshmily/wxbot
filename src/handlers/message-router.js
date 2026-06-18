@@ -6,7 +6,7 @@ import { handleGuessGame } from '../games/guess-number.js';
 import { handleIdiomGame } from '../games/idiom-chain.js';
 import { handleHistoryQuery } from './history.js';
 import { generateStatsReport, getWordFrequency } from '../services/statistics.js';
-import { getTodayMessages } from '../database/queries.js';
+import { getTodayMessages, getTemplate } from '../database/queries.js';
 import {
   getWeather, translate, draw, tellJoke,
   getFortune, getCheesyLine, getNews, getHistoryToday,
@@ -15,6 +15,44 @@ import { getBalance, getUsageStats } from '../services/deepseek.js';
 import config from '../config.js';
 
 const BOT_NAME = config.bot.name;
+
+// Default help text
+const DEFAULT_HELP = `📖 可用功能
+━━━━━━━━━━━━━━
+🗣 @${BOT_NAME} 提问 — AI对话
+━━━ 工具 ━━━
+🌤 天气 <城市> — 查天气
+🔤 翻译 <文本> — 中英互译
+━━━ 娱乐 ━━━
+😂 讲个笑话
+🔮 今天运势
+💕 土味情话
+🎯 抽签 / 抽奖
+━━━ 群聊 ━━━
+📊 群统计
+📊 高频词
+📋 今日总结
+📋 昨天说了什么
+🔍 搜索 <关键词>
+━━━ 资讯 ━━━
+📰 新闻
+📅 历史上的今天
+━━━ 账户 ━━━
+💰 余额 — 查DeepSeek余额
+📊 用量 — 查Token消耗
+━━━ 游戏 ━━━
+🎮 猜数字
+🎮 成语接龙`;
+
+/** Get help text from database or use default */
+function getHelpText() {
+  const saved = getTemplate('help');
+  if (saved) {
+    // Replace {botname} placeholder
+    return saved.replace(/\{botname\}/g, BOT_NAME);
+  }
+  return DEFAULT_HELP;
+}
 
 function isAtBot(text) {
   return text.startsWith(`@${BOT_NAME}`);
@@ -83,34 +121,7 @@ export function routeMessage(roomId, sender, content) {
       messageQueue.enqueue(roomId, getUsageStats());
       return;
     case '帮助':
-      messageQueue.enqueue(roomId,
-        `📖 可用功能\n` +
-        `━━━━━━━━━━━━━━\n` +
-        `🗣 @${BOT_NAME} 提问 — AI对话\n` +
-        `━━━ 工具 ━━━\n` +
-        `🌤 天气 <城市> — 查天气\n` +
-        `🔤 翻译 <文本> — 中英互译\n` +
-        `━━━ 娱乐 ━━━\n` +
-        `😂 讲个笑话\n` +
-        `🔮 今天运势\n` +
-        `💕 土味情话\n` +
-        `🎯 抽签 / 抽奖\n` +
-        `━━━ 群聊 ━━━\n` +
-        `📊 群统计\n` +
-        `📊 高频词\n` +
-        `📋 今日总结\n` +
-        `📋 昨天说了什么\n` +
-        `🔍 搜索 <关键词>\n` +
-        `━━━ 资讯 ━━━\n` +
-        `📰 新闻\n` +
-        `📅 历史上的今天\n` +
-        `━━━ 账户 ━━━\n` +
-        `💰 余额 — 查DeepSeek余额\n` +
-        `📊 用量 — 查Token消耗\n` +
-        `━━━ 游戏 ━━━\n` +
-        `🎮 猜数字\n` +
-        `🎮 成语接龙`
-      );
+      messageQueue.enqueue(roomId, getHelpText());
       return;
   }
 

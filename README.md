@@ -1,11 +1,11 @@
 # WXBot - 微信群 AI 机器人
 
-基于 [WeChatFerry](https://github.com/lich0821/WeChatFerry) + DeepSeek API + Node.js + SQLite 的微信群聊 AI 机器人。
+基于 [WeChatFerry](https://github.com/lich0821/WeChatFerry) + DeepSeek/MiMo API + Node.js + SQLite 的微信群聊 AI 机器人。
 
 ## 功能
 
 ### 🤖 AI 对话
-在群里 `@机器人` + 问题，触发单轮 AI 回答（无历史上下文，节省 Token）。
+在群里 `@机器人` + 问题，触发单轮 AI 回答（无历史上下文，节省 Token）。支持 DeepSeek 和 MiMo 两种 LLM。
 
 ### 🛠 工具
 | 命令 | 说明 |
@@ -31,12 +31,11 @@
 | `今日总结` | 今日群聊 AI 总结 |
 | `昨天说了什么` | 昨日群聊回顾 |
 | `搜索 <关键词>` | 搜索群聊历史消息 |
-| `刚才谁提到 <关键词>` | 快速查找最近提到 |
 
 ### 💰 账户
 | 命令 | 说明 |
 |------|------|
-| `余额` | 查 DeepSeek 账户余额 |
+| `余额` | 查 LLM 账户余额 |
 | `用量` | 查 Token 消耗统计 |
 
 ### 🎲 游戏
@@ -47,6 +46,30 @@
 
 ### ⏰ 定时总结
 每天 23:50 自动生成当日群聊总结。
+
+### 🖼 图片发送
+支持发送图片到群聊，图片消息跳过随机延迟直接发送。
+
+### 🔍 看门狗自重启
+- 事件循环心跳监控（检测 Node.js 卡死）
+- 微信连接心跳监控（检测断连）
+- 消息队列健康监控（检测积压）
+- 连续 3 次失败自动重连或重启
+- 连接失败自动重试 5 次，每次间隔 8 秒
+
+### 🌐 Web 管理后台
+启动后访问 http://localhost:3080 进入管理界面：
+- 服务状态监控（运行时间、内存、连接状态）
+- 微信连接管理（群组、联系人、重连）
+- 配置在线修改（风控、机器人、LLM）
+- 帮助菜单在线编辑（支持自定义模板）
+- 实时日志查看（带时间戳）
+- 服务重启控制
+
+### 📝 日志增强
+- 所有日志输出添加时间戳
+- 格式：`[2026/6/18 14:30:00] [WCF] Connected to WeChat`
+- API 限流自动重试并记录日志
 
 ## 快速开始
 
@@ -67,7 +90,7 @@ npm install
 
 # 配置
 cp .env.example .env
-# 编辑 .env，填入 DEEPSEEK_API_KEY
+# 编辑 .env，填入 LLM_API_KEY
 
 # 运行
 npm start
@@ -78,13 +101,14 @@ npm start
 ## 技术栈
 
 - **WeChatFerry** — 微信协议接入（DLL 注入）
-- **DeepSeek API** — AI 对话、总结、翻译等
-- **SQLite (better-sqlite3)** — 本地消息存储
+- **DeepSeek / MiMo** — AI 对话、总结、翻译等
+- **SQLite (sql.js)** — 本地消息存储
+- **Express** — Web 管理后台
 - **Node.js** — 运行环境
 
 ## 风控系统
 
-每小时每群最多 20 次 AI 回复，10% 随机跳过，1-3 秒随机延迟，均为降低被微信风控的概率。详见 `.env.example` 中的风控参数。
+每小时每群最多 20 次 AI 回复，10% 随机跳过，2-5 秒随机延迟，均为降低被微信风控的概率。支持通过 Web 后台在线调整风控参数。
 
 ## 项目结构
 
@@ -107,13 +131,23 @@ wxbot/
     │   └── summary.js         # 每日总结
     ├── services/
     │   ├── wechatferry.js     # WeChatFerry 客户端
-    │   ├── deepseek.js        # DeepSeek API
+    │   ├── deepseek.js        # LLM API
     │   ├── tools.js           # 实用工具
     │   ├── statistics.js      # 群统计
     │   ├── risk-control.js    # 风控
     │   ├── compressor.js      # 消息压缩
     │   ├── merger.js          # 消息合并
-    │   └── message-queue.js   # 发送队列
+    │   ├── message-queue.js   # 发送队列
+    │   └── watchdog.js        # 看门狗
+    ├── web/
+    │   ├── server.js          # Express 服务
+    │   ├── auth.js            # JWT 认证
+    │   ├── routes/
+    │   │   ├── status.js      # 状态 API
+    │   │   ├── config.js      # 配置 API
+    │   │   └── control.js     # 控制 API
+    │   └── public/
+    │       └── index.html     # 管理界面
     └── games/
         ├── guess-number.js    # 猜数字
         └── idiom-chain.js     # 成语接龙

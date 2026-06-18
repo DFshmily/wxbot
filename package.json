@@ -1,7 +1,7 @@
 {
   "name": "wxbot",
-  "version": "1.0.0",
-  "description": "微信群AI机器人系统 (WeChatFerry + DeepSeek + Node.js)",
+  "version": "1.2.3",
+  "description": "微信群AI机器人系统",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
@@ -9,10 +9,12 @@
     "dev": "node --watch src/index.js"
   },
   "dependencies": {
-    "better-sqlite3": "^11.0.0",
-    "openai": "^4.0.0",
     "dotenv": "^16.4.0",
+    "express": "^4.22.2",
+    "jsonwebtoken": "^9.0.3",
     "node-cron": "^3.0.3",
+    "openai": "^4.0.0",
+    "sql.js": "^1.14.1",
     "wechatferry": "0.0.26"
   }
 }

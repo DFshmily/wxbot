@@ -83,3 +83,27 @@ export function getRecentSpeakers(roomId, limit = 20) {
   `);
   return stmt.all(roomId, limit).map(r => r.sender);
 }
+
+// ===== Templates =====
+
+/** Get a template by key */
+export function getTemplate(key) {
+  const stmt = db.prepare('SELECT content FROM templates WHERE key = ?');
+  const row = stmt.get(key);
+  return row ? row.content : null;
+}
+
+/** Save or update a template */
+export function saveTemplate(key, content) {
+  const stmt = db.prepare(`
+    INSERT INTO templates (key, content, updated_at) VALUES (?, ?, datetime('now','localtime'))
+    ON CONFLICT(key) DO UPDATE SET content = excluded.content, updated_at = excluded.updated_at
+  `);
+  stmt.run(key, content);
+}
+
+/** Get all templates */
+export function getAllTemplates() {
+  const stmt = db.prepare('SELECT key, content, updated_at FROM templates ORDER BY key');
+  return stmt.all();
+}

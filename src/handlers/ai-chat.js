@@ -4,6 +4,12 @@ import riskControl from '../services/risk-control.js';
 import messageQueue from '../services/message-queue.js';
 import config from '../config.js';
 
+// 带时间的日志函数
+function logWithTime(level, ...args) {
+  const time = new Date().toLocaleString('zh-CN', { hour12: false });
+  console.error(`[${time}] [${level}]`, ...args);
+}
+
 /**
  * AI chat handler — single-round Q&A, no history, compressed input.
  * Per doc §4.1 and §7.2: no historical context, single-turn.
@@ -28,6 +34,6 @@ export async function handleAIChat(roomId, sender, content) {
     riskControl.recordAIReply(roomId);
     messageQueue.enqueue(roomId, reply);
   } catch (err) {
-    console.error('[AI Chat] Error:', err.message);
+    logWithTime('ERROR', '[AI Chat]', err.message);
   }
 }
