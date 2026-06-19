@@ -556,6 +556,41 @@ function handlePets(roomId, sender) {
   messageQueue.enqueue(roomId, r);
 }
 
+function handleGuide(roomId) {
+  const guide = `━━━ 凡人修仙 · 攻略 ━━━
+
+📖 三步上手
+  💬 发消息 → 自动涨修为
+  📊 我的修为 → 看进度
+  🧘 修炼 → 突破境界
+
+━━ 修为获取 ━━
+💬 每条消息 +1
+✅ 每天签到 +1
+🗺 秘境探险 +3~10
+⚔️ 斗法胜利 +1
+
+━━ 灵石获取 ━━
+✅ 签到 每日1~10+
+🗺 探险 每次5~50
+⚔️ 斗法胜利 +7
+
+━━ 常用命令 ━━
+📊 我的修为 — 个人状态
+🗺 境界大全 — 13阶天梯图
+🏪 商店 [分类] — 查看商品
+🛒 购买 <名> — 买东西
+🎒 储物袋 — 查看物品
+🧘 修炼 [丹药] — 突破境界
+🔥 炼丹 <名> — 半价炼药
+⚔️ 斗法 [@xxx] — 修士对决
+🗺 秘境/探险 — 寻宝（耗精力）
+📊 境界排行 / 灵石榜 — 排名
+
+💡 发「修仙攻略」或「修仙帮助」再看本指南`;
+  messageQueue.enqueue(roomId, guide);
+}
+
 function handleLevelRanking(roomId) {
   const rows = db.prepare(`
     SELECT wxid, realm_idx, exp_pool
@@ -828,6 +863,8 @@ export default {
       '境界大全': () => handleRealmOverview(roomId, sender),
       '道途': () => handleRealmOverview(roomId, sender),
       '修仙指南': () => handleRealmOverview(roomId, sender),
+      '修仙帮助': () => handleGuide(roomId),
+      '修仙攻略': () => handleGuide(roomId),
       '境界排行': () => handleLevelRanking(roomId),
       '境界排行榜': () => handleLevelRanking(roomId),
       '等级排行': () => handleLevelRanking(roomId),
@@ -879,6 +916,7 @@ export default {
 
   getHelpLines() {
     return [
+      '📖 修仙帮助 / 修仙攻略 — 完整玩法指南',
       '👤 我的修为 / 我的等级 — 查看修仙境界',
       '🗺 境界大全 / 道途 — 完整境界天梯图',
       '📊 境界排行 / 境界排行榜 — 境界排名',

@@ -30,8 +30,14 @@ class RiskControl {
     return true;
   }
 
-  /** Check if we should respond to a specific AI request */
-  shouldReply(roomId) {
+  /**
+   * Check if we should respond to a specific AI request
+   * @param {string} roomId
+   * @param {object} [opts]
+   * @param {boolean} [opts.skipRandom] - Skip the random skip (for @mentions)
+   * @param {boolean} [opts.skipCooldown] - Skip AI cooldown (for @mentions)
+   */
+  shouldReply(roomId, { skipRandom = false, skipCooldown = false } = {}) {
     const now = Date.now();
     const hourKey = new Date().getHours();
     const dateKey = new Date().toISOString().slice(0, 10);
@@ -56,13 +62,15 @@ class RiskControl {
     }
 
     // AI cooldown: avoid replying too fast within the same group
-    const cooldown = this.aiCooldowns.get(roomId);
-    if (cooldown && now - cooldown < config.risk.cooldownMinutes * 60 * 1000) {
-      return false;
+    if (!skipCooldown) {
+      const cooldown = this.aiCooldowns.get(roomId);
+      if (cooldown && now - cooldown < config.risk.cooldownMinutes * 60 * 1000) {
+        return false;
+      }
     }
 
     // Random skip (low probability to avoid looking like a bot)
-    if (Math.random() < config.risk.randomSkipRate) {
+    if (!skipRandom && Math.random() < config.risk.randomSkipRate) {
       return false;
     }
 

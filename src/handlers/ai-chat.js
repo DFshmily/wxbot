@@ -21,8 +21,8 @@ function logWithTime(level, ...args) {
  * 如果安装了修仙插件，自动带上修为境界
  */
 export async function handleAIChat(roomId, sender, content) {
-  // Risk check
-  if (!riskControl.shouldReply(roomId)) return;
+  // Risk check — @mention 跳过随机跳过和冷却，但保留每小时/每日上限
+  if (!riskControl.shouldReply(roomId, { skipRandom: true, skipCooldown: true })) return;
 
   // Strip @bot prefix
   const query = content.replace(/@[^\s]+\s*/, '').trim();

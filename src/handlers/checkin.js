@@ -25,7 +25,15 @@ export function handleCheckin(roomId, wxid) {
   if (hasCheckedIn(roomId, wxid)) {
     const streak = getConsecutiveCheckinDays(roomId, wxid);
     const total = getUserCheckinDays(roomId, wxid);
-    messageQueue.enqueue(roomId, `⚠️ ${name} 今日已签到！\n🔥 连续签到 ${streak} 天 | 累计 ${total} 天`);
+    const cultInfo = pluginManager.callAPI('getCultivationInfo', roomId, wxid);
+    let reply = `⚠️ ${name} 今日已签到！\n━━━━━━━━━━\n🔥 连续签到 ${streak} 天 | 累计 ${total} 天`;
+    if (cultInfo) {
+      const progressBar = cultInfo.expPoolNeeded ? `\n${makeProgressBar(cultInfo.exp_pool, cultInfo.expPoolNeeded)}` : '';
+      reply += `\n📖 境界: ${cultInfo.title}`;
+      if (progressBar) reply += `\n📊 修为: ${cultInfo.exp_pool}/${cultInfo.expPoolNeeded}${progressBar}`;
+      reply += `\n💬 道行: ${cultInfo.messages} 条 · ⚡ 精力: ${cultInfo.energy ?? 0}/${cultInfo.maxEnergy ?? 20}`;
+    }
+    messageQueue.enqueue(roomId, reply);
     return;
   }
 
