@@ -52,7 +52,7 @@ router.get('/health', (req, res) => {
 });
 
 /**
- * GET /api/status/groups — 群组列表
+ * GET /api/status/groups — 群组列表（带显示名）
  */
 router.get('/groups', (req, res) => {
   const groups = [...wechat.groups].map(roomId => {
@@ -63,7 +63,19 @@ router.get('/groups', (req, res) => {
     } catch {
       groupConfig = null;
     }
-    return { roomId, config: groupConfig };
+    const displayName = wechat.getDisplayName(roomId);
+    return {
+      roomId,
+      displayName: displayName !== roomId ? displayName : '',
+      config: groupConfig,
+    };
+  });
+
+  // Sort by display name
+  groups.sort((a, b) => {
+    const aName = a.displayName || a.roomId;
+    const bName = b.displayName || b.roomId;
+    return aName.localeCompare(bName);
   });
 
   res.json({ groups, total: groups.length });

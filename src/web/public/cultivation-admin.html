@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>凡人修仙传 · 灵府仙笺</title>
+  <style>
+    /* === Reset & Base === */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: #0a0a14;
+      color: #c8c8d8;
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse at 20% 50%, rgba(83, 52, 131, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(233, 69, 96, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(15, 52, 96, 0.1) 0%, transparent 50%);
+    }
+
+    .container { max-width: 1440px; margin: 0 auto; padding: 16px 20px; }
+
+    /* === Scrollbar === */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: rgba(83, 52, 131, 0.5); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(83, 52, 131, 0.8); }
+
+    /* === Header / 灵府 === */
+    .header {
+      background: linear-gradient(135deg, rgba(22, 33, 62, 0.95), rgba(15, 52, 96, 0.9));
+      border: 1px solid rgba(83, 52, 131, 0.5);
+      border-radius: 16px;
+      padding: 20px 28px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, #e94560, #533483, #e94560, transparent);
+    }
+    .header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      background: linear-gradient(90deg, #f0e6d0, #e9c46a, #f0e6d0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 2px;
+      text-shadow: none;
+    }
+    .header .subtitle {
+      font-size: 12px;
+      color: rgba(160, 160, 192, 0.6);
+      letter-spacing: 4px;
+    }
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* === Cards / 洞府 === */
+    .card {
+      background: linear-gradient(160deg, rgba(22, 33, 62, 0.9), rgba(15, 15, 35, 0.85));
+      border: 1px solid rgba(83, 52, 131, 0.3);
+      border-radius: 14px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(10px);
+      transition: border-color 0.3s;
+    }
+    .card:hover { border-color: rgba(83, 52, 131, 0.6); }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      color: rgba(200, 200, 216, 0.7);
+      letter-spacing: 1px;
+      border-bottom: 1px solid rgba(83, 52, 131, 0.15);
+      padding-bottom: 10px;
+    }
+    .card-header .icon { font-size: 18px; }
+
+    /* === Room Selector / 洞天福地 === */
+    .room-selector {
+      display: flex;
+      gap: 12px;
+      align-items: end;
+      flex-wrap: wrap;
+    }
+    .room-selector .form-group {
+      flex: 1;
+      min-width: 280px;
+      margin-bottom: 0;
+    }
+    .room-selector select {
+      width: 100%;
+      padding: 10px 14px;
+      background: rgba(15, 52, 96, 0.6);
+      border: 1px solid rgba(83, 52, 131, 0.4);
+      border-radius: 10px;
+      color: #e0e0e8;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238888aa' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      transition: border-color 0.2s;
+    }
+    .room-selector select:focus {
+      outline: none;
+      border-color: #e94560;
+      box-shadow: 0 0 12px rgba(233, 69, 96, 0.15);
+    }
+    .room-selector select option {
+      background: #16213e;
+      color: #e0e0e8;
+    }
+
+    /* === Stats / 灵蕴 === */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      background: linear-gradient(160deg, rgba(15, 52, 96, 0.5), rgba(22, 33, 62, 0.4));
+      border: 1px solid rgba(83, 52, 131, 0.2);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.2s;
+    }
+    .stat-card:hover {
+      border-color: rgba(233, 69, 96, 0.4);
+      transform: translateY(-2px);
+    }
+    .stat-card .stat-icon { font-size: 22px; margin-bottom: 6px; }
+    .stat-card .stat-num {
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(180deg, #f0e6d0, #e9c46a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+    }
+    .stat-card .stat-label {
+      font-size: 11px;
+      color: rgba(160, 160, 192, 0.6);
+      margin-top: 4px;
+      letter-spacing: 1px;
+    }
+    .stat-card .stat-glow {
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(circle at 50% 0%, rgba(233, 69, 96, 0.05), transparent 60%);
+      pointer-events: none;
+    }
+
+    /* === Empty State / 荒芜 === */
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+    }
+    .empty-state .icon {
+      font-size: 56px;
+      margin-bottom: 12px;
+      display: block;
+      opacity: 0.6;
+    }
+    .empty-state p { color: rgba(160, 160, 192, 0.6); line-height: 1.8; }
+    .empty-state .hint { font-size: 12px; margin-top: 8px; color: rgba(160, 160, 192, 0.4); }
+
+    /* === Tabs / 法门 === */
+    .tabs {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 16px;
+      background: rgba(15, 52, 96, 0.3);
+      border-radius: 12px;
+      padding: 4px;
+      border: 1px solid rgba(83, 52, 131, 0.15);
+    }
+    .tab {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      background: transparent;
+      color: rgba(160, 160, 192, 0.6);
+      cursor: pointer;
+      border-radius: 9px;
+      font-size: 13px;
+      font-family: inherit;
+      transition: all 0.3s;
+      text-align: center;
+    }
+    .tab:hover { color: #c8c8d8; background: rgba(255,255,255,0.04); }
+    .tab.active {
+      background: linear-gradient(135deg, rgba(83, 52, 131, 0.6), rgba(233, 69, 96, 0.3));
+      color: #f0e6d0;
+      font-weight: 600;
+      box-shadow: 0 2px 12px rgba(83, 52, 131, 0.2);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* === Table / 灵册 === */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 10px;
+      border: 1px solid rgba(83, 52, 131, 0.1);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid rgba(83, 52, 131, 0.1);
+    }
+    th {
+      color: rgba(160, 160, 192, 0.5);
+      font-weight: 600;
+      font-size: 11px;
+      letter-spacing: 1px;
+      white-space: nowrap;
+      background: rgba(15, 52, 96, 0.3);
+    }
+    td { color: #c8c8d8; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(83, 52, 131, 0.12); }
+    .realm-badge {
+      display: inline-block;
+      padding: 2px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      background: linear-gradient(135deg, rgba(83, 52, 131, 0.4), rgba(233, 69, 96, 0.15));
+      border: 1px solid rgba(83, 52, 131, 0.3);
+      color: #f0e6d0;
+      white-space: nowrap;
+    }
+    .wxid-cell {
+      font-size: 11px;
+      color: rgba(160, 160, 192, 0.5);
+      font-family: 'SF Mono', 'Consolas', monospace;
+      max-width: 100px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .name-cell { font-weight: 500; color: #e0e0e8; }
+
+    /* === Items Tags / 灵物 === */
+    .items-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      max-width: 240px;
+    }
+    .item-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 8px;
+      background: rgba(15, 52, 96, 0.5);
+      border-radius: 4px;
+      font-size: 11px;
+      color: rgba(200, 200, 216, 0.8);
+      border: 1px solid rgba(83, 52, 131, 0.2);
+    }
+    .item-tag .del {
+      cursor: pointer;
+      color: rgba(233, 69, 96, 0.7);
+      font-weight: bold;
+      margin-left: 2px;
+      font-size: 12px;
+      line-height: 1;
+    }
+    .item-tag .del:hover { color: #e94560; }
+
+    /* === Buttons / 法诀 === */
+    .btn {
+      padding: 8px 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      transition: all 0.25s;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary {
+      background: linear-gradient(135deg, #533483, #7b4fbf);
+      color: #f0e6d0;
+      box-shadow: 0 2px 10px rgba(83, 52, 131, 0.3);
+    }
+    .btn-primary:hover { box-shadow: 0 4px 16px rgba(83, 52, 131, 0.5); }
+    .btn-success {
+      background: linear-gradient(135deg, #07c160, #06ad56);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(7, 193, 96, 0.2);
+    }
+    .btn-danger {
+      background: linear-gradient(135deg, #c0392b, #e74c3c);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(231, 76, 60, 0.2);
+    }
+    .btn-warning {
+      background: linear-gradient(135deg, #e67e22, #f39c12);
+      color: #fff;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid rgba(83, 52, 131, 0.4);
+      color: rgba(200, 200, 216, 0.7);
+    }
+    .btn-outline:hover {
+      background: rgba(83, 52, 131, 0.2);
+      border-color: rgba(83, 52, 131, 0.7);
+    }
+    .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; }
+    .btn-xs { padding: 3px 8px; font-size: 11px; border-radius: 4px; }
+    .btn-group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+    /* === Forms / 灵符 === */
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      color: rgba(160, 160, 192, 0.6);
+      margin-bottom: 5px;
+      letter-spacing: 0.5px;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 9px 12px;
+      background: rgba(15, 52, 96, 0.4);
+      border: 1px solid rgba(83, 52, 131, 0.3);
+      border-radius: 8px;
+      color: #e0e0e8;
+      font-size: 13px;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: #e94560;
+      box-shadow: 0 0 10px rgba(233, 69, 96, 0.1);
+    }
+    .form-group select { cursor: pointer; }
+    .form-group textarea { min-height: 60px; resize: vertical; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .form-row-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+
+    /* === Modal / 秘境 === */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      animation: modalFadeIn 0.2s ease;
+    }
+    @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal {
+      background: linear-gradient(160deg, rgba(22, 33, 62, 0.98), rgba(10, 10, 20, 0.98));
+      border: 1px solid rgba(83, 52, 131, 0.4);
+      border-radius: 16px;
+      padding: 28px;
+      width: 640px;
+      max-width: 92vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(83, 52, 131, 0.1);
+      animation: modalSlideIn 0.25s ease;
+    }
+    @keyframes modalSlideIn { from { opacity: 0; transform: translateY(20px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .modal h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      background: linear-gradient(90deg, #f0e6d0, #e9c46a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .modal .sub {
+      font-size: 12px;
+      color: rgba(160, 160, 192, 0.5);
+      margin-bottom: 16px;
+    }
+    .modal .btn-group { margin-top: 16px; justify-content: flex-end; }
+
+    /* === Shop / 珍宝阁 === */
+    .shop-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 8px;
+    }
+    .shop-card {
+      background: rgba(15, 52, 96, 0.3);
+      border: 1px solid rgba(83, 52, 131, 0.15);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: border-color 0.2s;
+    }
+    .shop-card:hover { border-color: rgba(83, 52, 131, 0.4); }
+    .shop-card-info { flex: 1; min-width: 0; }
+    .shop-card-name {
+      font-weight: 600;
+      font-size: 13px;
+      color: #e0e0e8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .shop-card-meta {
+      font-size: 11px;
+      color: rgba(160, 160, 192, 0.5);
+      margin-top: 2px;
+    }
+    .shop-card .price {
+      display: inline-block;
+      padding: 1px 8px;
+      border-radius: 4px;
+      background: rgba(233, 69, 96, 0.15);
+      color: #e9c46a;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .type-badge {
+      display: inline-block;
+      padding: 1px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      background: rgba(83, 52, 131, 0.3);
+      color: rgba(200, 200, 216, 0.7);
+      margin-left: 4px;
+    }
+
+    /* === Toast / 天机 === */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      background: linear-gradient(135deg, rgba(22, 33, 62, 0.95), rgba(15, 15, 35, 0.95));
+      border: 1px solid rgba(83, 52, 131, 0.4);
+      border-radius: 10px;
+      padding: 12px 20px;
+      color: #f0e6d0;
+      font-size: 13px;
+      pointer-events: auto;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+    }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(20px); } }
+
+    /* === Responsive === */
+    @media (max-width: 768px) {
+      .form-row, .form-row-3, .form-row-4 { grid-template-columns: 1fr; }
+      .room-selector { flex-direction: column; }
+      .room-selector .form-group { min-width: auto; }
+      .header { flex-direction: column; text-align: center; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .shop-grid { grid-template-columns: 1fr; }
+      .tabs { flex-direction: row; }
+      .tab { font-size: 12px; padding: 8px 12px; }
+    }
+
+    /* === Section title divider === */
+    .section-title {
+      font-size: 13px;
+      color: rgba(200, 200, 216, 0.4);
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(83, 52, 131, 0.1);
+    }
+
+    /* === Inline edit tag styles in modal === */
+    .items-edit-area {
+      background: rgba(15, 52, 96, 0.2);
+      border: 1px dashed rgba(83, 52, 131, 0.2);
+      border-radius: 8px;
+      padding: 12px;
+      min-height: 48px;
+      margin-top: 8px;
+    }
+    .items-edit-area:empty::after {
+      content: '暂无物品，从上方添加';
+      color: rgba(160, 160, 192, 0.3);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- 灵府  header -->
+  <div class="header">
+    <div>
+      <h1>🧘 凡人修仙传 · 灵府仙笺</h1>
+      <div class="subtitle">— 掌管一方洞天，监察众修进境 —</div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline btn-sm" onclick="location.href='/index.html'">← 返回总坛</button>
+      <button class="btn btn-primary btn-sm" onclick="refreshAll()">🔄 刷新灵蕴</button>
+    </div>
+  </div>
+
+  <!-- 洞天福地  room selector -->
+  <div class="card">
+    <div class="card-header"><span class="icon">🏘</span> 洞天福地 · 选定仙山</div>
+    <div class="room-selector">
+      <div class="form-group">
+        <label>选择群——各洞天数据独立，互不干涉</label>
+        <select id="roomSelector" onchange="onRoomChange()">
+          <option value="">— 请择一洞天 —</option>
+        </select>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="loadRooms()">🔄 刷新洞天</button>
+    </div>
+  </div>
+
+  <!-- 荒芜 -->
+  <div id="noRoomMsg" class="card" style="border-style:dashed">
+    <div class="empty-state">
+      <span class="icon">🏔</span>
+      <p>请先在上方选定一处洞天福地</p>
+      <p class="hint">唯有选定仙山，方可窥见该界修士之灵蕴</p>
+    </div>
+  </div>
+
+  <!-- 仙府  main -->
+  <div id="mainContent" style="display:none">
+
+    <!-- 灵蕴  stats -->
+    <div class="stats-grid" id="statsRow">
+      <div class="stat-card">
+        <div class="stat-glow"></div>
+        <div class="stat-icon">👥</div>
+        <div class="stat-num" id="totalUsers">-</div>
+        <div class="stat-label">修士总数</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-glow"></div>
+        <div class="stat-icon">💎</div>
+        <div class="stat-num" id="totalStones">-</div>
+        <div class="stat-label">灵石总量</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-glow"></div>
+        <div class="stat-icon">📈</div>
+        <div class="stat-num" id="avgRealm" style="font-size:22px">-</div>
+        <div class="stat-label">平均境界</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-glow"></div>
+        <div class="stat-icon">🏆</div>
+        <div class="stat-num" id="highestRealm" style="font-size:22px">-</div>
+        <div class="stat-label">最高境界</div>
+      </div>
+    </div>
+
+    <!-- 法门  tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('users')">👥 修士名册</button>
+      <button class="tab" onclick="switchTab('shop')">🏪 珍宝阁</button>
+      <button class="tab" onclick="switchTab('pills')">💊 丹方集</button>
+    </div>
+
+    <!-- ==================== 修士名册 ==================== -->
+    <div id="tab-users" class="tab-content active">
+      <div class="card">
+        <div class="card-header"><span class="icon">👥</span> 修士名册 <span id="roomLabel" style="font-weight:normal;font-size:12px;color:rgba(160,160,192,0.5)"></span></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>道号</th>
+                <th>法印</th>
+                <th>境界</th>
+                <th>灵石</th>
+                <th>修为</th>
+                <th>灵物</th>
+                <th>执掌</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody">
+              <tr><td colspan="8" style="text-align:center;color:rgba(160,160,192,0.3);padding:32px">占卜中...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 珍宝阁 ==================== -->
+    <div id="tab-shop" class="tab-content">
+      <div class="card">
+        <div class="card-header"><span class="icon">🏪</span> 珍宝阁 · 坊市货殖</div>
+        <p style="font-size:12px;color:rgba(160,160,192,0.4);margin-bottom:16px">修改后记得「保存至灵玺」，否则功亏一篑。删除法宝前确认无人持有。</p>
+        <div id="shopItemList" style="margin-bottom:12px">加载中...</div>
+        <div class="btn-group">
+          <button class="btn btn-success btn-sm" onclick="showAddShopItem()">+ 增列宝物</button>
+          <div style="flex:1"></div>
+          <button class="btn btn-primary" onclick="saveShopConfig()">💾 保存至灵玺</button>
+          <button class="btn btn-outline btn-sm" onclick="loadShopConfig()">⟳ 重置</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 丹方集 ==================== -->
+    <div id="tab-pills" class="tab-content">
+      <div class="card">
+        <div class="card-header"><span class="icon">💊</span> 丹方集 · 百草秘录</div>
+        <p style="font-size:12px;color:rgba(160,160,192,0.4);margin-bottom:16px">丹方改动将同步影响炼丹与坊市。</p>
+        <div id="pillsList" style="margin-bottom:12px">加载中...</div>
+        <div class="btn-group">
+          <button class="btn btn-success btn-sm" onclick="showAddPill()">+ 新增丹方</button>
+          <div style="flex:1"></div>
+          <button class="btn btn-primary" onclick="savePillsConfig()">💾 保存至灵玺</button>
+          <button class="btn btn-outline btn-sm" onclick="loadPillsConfig()">⟳ 重置</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 天机  toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ==================== 秘境：编辑修士 ==================== -->
+<div id="editUserModal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <h3>✏️ 天机令 · 修改修士</h3>
+    <div class="sub" id="editUserLabel"></div>
+
+    <div class="form-row-3">
+      <div class="form-group">
+        <label>境界</label>
+        <select id="edit_realmIdx"></select>
+      </div>
+      <div class="form-group">
+        <label>灵石</label>
+        <input id="edit_stones" type="number" min="0">
+      </div>
+      <div class="form-group">
+        <label>修为</label>
+        <input id="edit_exp" type="number" min="0">
+      </div>
+    </div>
+
+    <div style="margin-top:20px">
+      <div class="section-title">🎒 灵物袋 · 掌中芥子</div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>品类</label>
+          <select id="editItem_category">
+            <option value="pills">丹药</option>
+            <option value="equipment">法器</option>
+            <option value="pets">灵兽</option>
+            <option value="techniques">功法</option>
+            <option value="consumables">消耗品</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>宝物</label>
+          <select id="editItem_selector"><option value="">— 待选品类 —</option></select>
+        </div>
+        <div class="form-group">
+          <label>数量</label>
+          <div style="display:flex;gap:4px">
+            <input id="editItem_count" type="number" min="1" value="1" style="flex:1">
+            <button class="btn btn-success btn-xs" onclick="addItemToEditUser()" style="white-space:nowrap">赐物</button>
+          </div>
+        </div>
+      </div>
+      <div class="items-edit-area" id="editUserItems"></div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="saveEditUser()">💾 敕令颁行</button>
+      <button class="btn btn-outline" onclick="closeEditUser()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 秘境：新增宝物 ==================== -->
+<div id="addShopModal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <h3>🏪 灵玺敕封 · 增列宝物</h3>
+    <div class="sub">新宝物将出现在坊市中，修士可凭灵石购买</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>宝物名称</label>
+        <input id="shop_name" placeholder="例：玄天斩灵剑">
+      </div>
+      <div class="form-group">
+        <label>品类</label>
+        <select id="shop_type">
+          <option value="equipment">⚔ 法器 (equipment)</option>
+          <option value="pet">🐉 灵兽 (pet)</option>
+          <option value="technique">📜 功法 (technique)</option>
+          <option value="consumable">⚡ 消耗品 (consumable)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>价格（灵石）</label>
+        <input id="shop_price" type="number" min="0" value="100">
+      </div>
+      <div class="form-group">
+        <label>被动灵蕴</label>
+        <select id="shop_passive">
+          <option value="">无</option>
+          <option value="checkin_bonus">签到灵石加成</option>
+          <option value="duel_win_rate">斗法胜率</option>
+          <option value="duel_loss_protect">斗法减损</option>
+          <option value="breakthrough_rate">突破加成</option>
+          <option value="breakthrough_loss">突破减损</option>
+          <option value="duel_auto_win">斗法必胜</option>
+          <option value="breakthrough_auto">突破必成</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>灵蕴数值</label>
+        <input id="shop_passiveVal" type="number" step="0.01" value="0" placeholder="0.05=5%，3=+3灵石">
+      </div>
+      <div class="form-group">
+        <label>说明</label>
+        <input id="shop_desc" placeholder="例：斗法胜率+8%">
+      </div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="confirmAddShopItem()">✅ 敕封</button>
+      <button class="btn btn-outline" onclick="closeAddShop()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 秘境：新增丹方 ==================== -->
+<div id="addPillModal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <h3>💊 丹鼎新方 · 增列丹药</h3>
+    <div class="sub">新丹方将出现在坊市与炼丹系统中</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>丹药名称</label>
+        <input id="pill_name" placeholder="例：凝碧丹">
+      </div>
+      <div class="form-group">
+        <label>炼丹成本（灵石）</label>
+        <input id="pill_cost" type="number" min="0" value="10">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>突破加成（0~1）</label>
+        <input id="pill_bonus" type="number" step="0.05" value="0.10">
+      </div>
+      <div class="form-group">
+        <label>说明</label>
+        <input id="pill_desc" placeholder="例：突破成功率+10%">
+      </div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="confirmAddPill()">✅ 敕封</button>
+      <button class="btn btn-outline" onclick="closeAddPill()">取消</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const REALM_TITLES = ['🧘 练气初期','🧘 练气中期','🧘 练气后期','🏛 筑基初期','🏛 筑基中期','🏛 筑基后期','💎 结丹初期','💎 结丹中期','💎 结丹后期','👁 元婴初期','👁 元婴中期','👁 元婴后期','✨ 化神期·大能'];
+  const CATEGORY_LABELS = { pills: '丹药', equipment: '法器', pets: '灵兽', techniques: '功法', consumables: '消耗品' };
+
+  const TOKEN = localStorage.getItem('wxbot_token');
+  if (!TOKEN) { location.href = '/index.html'; }
+
+  let _selectedRoom = '';
+  let _users = [];
+  let _editTarget = null;
+  let _editUserItems = {};
+  let _shopItems = [];
+  let _pills = {};
+
+  async function api(method, path, body) {
+    const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` } };
+    if (body) opts.body = JSON.stringify(body);
+    try {
+      const res = await fetch(path, opts);
+      if (res.status === 401) { location.href = '/index.html'; return null; }
+      return res.json();
+    } catch (e) { showToast('灵络不通: ' + e.message); return null; }
+  }
+
+  function showToast(msg) {
+    const container = document.getElementById('toastContainer');
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.textContent = msg;
+    container.appendChild(el);
+    setTimeout(() => { if (el.parentNode) el.remove(); }, 3000);
+  }
+
+  // ============================================================
+  // 洞天福地 — Room Selection
+  // ============================================================
+  async function loadRooms() {
+    const sel = document.getElementById('roomSelector');
+    const prevVal = sel.value;
+    sel.innerHTML = '<option value="">— 灵蕴汇聚中... —</option>';
+    const data = await api('GET', '/api/plugins/cultivation/rooms');
+    if (!data || !data.rooms) { sel.innerHTML = '<option value="">— 灵络断矣 —</option>'; return; }
+    sel.innerHTML = '<option value="">— 请择一洞天 —</option>';
+    for (const room of data.rooms) {
+      const label = room.display_name
+        ? `🏔 ${room.display_name}（${room.user_count}人）`
+        : `🏔 ${room.room_id}（${room.user_count}人）`;
+      const opt = document.createElement('option');
+      opt.value = room.room_id;
+      opt.textContent = label;
+      sel.appendChild(opt);
+    }
+    if (prevVal && [...sel.options].some(o => o.value === prevVal)) sel.value = prevVal;
+    onRoomChange();
+  }
+
+  function onRoomChange() {
+    _selectedRoom = document.getElementById('roomSelector').value;
+    if (!_selectedRoom) {
+      document.getElementById('noRoomMsg').style.display = 'block';
+      document.getElementById('mainContent').style.display = 'none';
+      return;
+    }
+    document.getElementById('noRoomMsg').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    const sel = document.getElementById('roomSelector');
+    const label = sel.selectedOptions[0]?.textContent || _selectedRoom;
+    document.getElementById('roomLabel').textContent = `· ${label}`;
+    loadUsers();
+  }
+
+  // ============================================================
+  // 法门 — Tab Switching
+  // ============================================================
+  let _currentTab = 'users';
+
+  function switchTab(name) {
+    _currentTab = name;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    const idx = ['users', 'shop', 'pills'].indexOf(name);
+    document.querySelectorAll('.tab')[idx]?.classList.add('active');
+    document.getElementById(`tab-${name}`)?.classList.add('active');
+    if (name === 'shop') loadShopConfig();
+    if (name === 'pills') loadPillsConfig();
+  }
+
+  async function refreshAll() {
+    if (!_selectedRoom) { loadRooms(); return; }
+    loadUsers();
+    if (_currentTab === 'shop') loadShopConfig();
+    if (_currentTab === 'pills') loadPillsConfig();
+  }
+
+  // ============================================================
+  // 修士名册 — Users
+  // ============================================================
+  async function loadUsers() {
+    if (!_selectedRoom) return;
+    const data = await api('GET', `/api/plugins/cultivation/users?room_id=${encodeURIComponent(_selectedRoom)}`);
+    if (!data) return;
+    _users = data.users || [];
+
+    // Stats
+    document.getElementById('totalUsers').textContent = _users.length;
+    const totalStones = _users.reduce((s, u) => s + u.spirit_stones, 0);
+    document.getElementById('totalStones').textContent = totalStones.toLocaleString();
+    const avgIdx = _users.length ? Math.round(_users.reduce((s, u) => s + u.realm_idx, 0) / _users.length) : 0;
+    document.getElementById('avgRealm').textContent = REALM_TITLES[Math.min(avgIdx, 12)] || '未知';
+    const maxIdx = _users.length ? Math.max(..._users.map(u => u.realm_idx)) : 0;
+    document.getElementById('highestRealm').textContent = REALM_TITLES[Math.min(maxIdx, 12)] || '未知';
+
+    const tbody = document.getElementById('userTableBody');
+    if (!_users.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:rgba(160,160,192,0.3);padding:32px">此洞天尚无修士踏足</td></tr>';
+      return;
+    }
+    tbody.innerHTML = _users.map((u, i) => {
+      const items = parseItems(u.items);
+      const itemTags = Object.entries(items).flatMap(([cat, ids]) =>
+        Object.entries(ids).filter(([, c]) => c > 0).map(([id, c]) =>
+          `<span class="item-tag">${CATEGORY_LABELS[cat]||cat}:${id}${c>1?' ×'+c:''}</span>`
+        )
+      ).join('');
+      return `<tr>
+        <td style="color:rgba(160,160,192,0.4)">${i + 1}</td>
+        <td><span class="name-cell">${u.display_name || '未知修士'}</span></td>
+        <td><span class="wxid-cell" title="${u.wxid}">${u.wxid}</span></td>
+        <td><span class="realm-badge">${u.realm_title}</span></td>
+        <td>${u.spirit_stones.toLocaleString()}</td>
+        <td>${u.exp_pool.toLocaleString()}</td>
+        <td><div class="items-tags">${itemTags || '<span style="color:rgba(160,160,192,0.2)">空</span>'}</div></td>
+        <td><div class="btn-group">
+          <button class="btn btn-primary btn-xs" onclick="editUser(${i})">✏️</button>
+          <button class="btn btn-danger btn-xs" onclick="deleteUser(${i})">🗑</button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function parseItems(items) {
+    if (!items) return {};
+    if (typeof items === 'string') { try { return JSON.parse(items); } catch { return {}; } }
+    return items;
+  }
+
+  // ============================================================
+  // 天机令 — Edit User
+  // ============================================================
+  async function editUser(idx) {
+    const u = _users[idx];
+    if (!u) return;
+    _editTarget = idx;
+    document.getElementById('editUserLabel').textContent = `${u.display_name || u.wxid} · ${u.room_name || u.room_id}`;
+
+    const realmSel = document.getElementById('edit_realmIdx');
+    realmSel.innerHTML = REALM_TITLES.map((t, i) => `<option value="${i}" ${i === u.realm_idx ? 'selected' : ''}>${t}</option>`).join('');
+    document.getElementById('edit_stones').value = u.spirit_stones;
+    document.getElementById('edit_exp').value = u.exp_pool;
+
+    _editUserItems = parseItems(u.items);
+    renderEditUserItems();
+    // 先清空宝物下拉，加载配置后再填充
+    document.getElementById('editItem_selector').innerHTML = '<option value="">— 加载中... —</option>';
+    await loadItemSelector();
+    // 根据当前选中的品类填充宝物列表
+    populateItemDropdown(document.getElementById('editItem_category').value);
+    document.getElementById('editUserModal').style.display = 'flex';
+  }
+
+  function closeEditUser() {
+    _editTarget = null;
+    _editUserItems = {};
+    document.getElementById('editUserModal').style.display = 'none';
+  }
+
+  async function loadItemSelector() {
+    const data = await api('GET', '/api/plugins/cultivation/config');
+    if (!data) return;
+    _shopItems = data.shop || [];
+    _pills = data.pills || {};
+  }
+
+  document.getElementById('editItem_category').addEventListener('change', function() {
+    populateItemDropdown(this.value);
+  });
+
+  function populateItemDropdown(category) {
+    const sel = document.getElementById('editItem_selector');
+    sel.innerHTML = '<option value="">— 选一宝物 —</option>';
+    let items = [];
+    if (category === 'pills') {
+      items = Object.entries(_pills || {}).map(([name]) => name);
+    } else {
+      const typeMap = { equipment: 'equipment', pets: 'pet', techniques: 'technique', consumables: 'consumable' };
+      const itemType = typeMap[category];
+      items = (_shopItems || []).filter(s => s.type === itemType).map(s => s.id);
+    }
+    items.sort().forEach(id => {
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = id;
+      sel.appendChild(opt);
+    });
+  }
+
+  function addItemToEditUser() {
+    const cat = document.getElementById('editItem_category').value;
+    const itemId = document.getElementById('editItem_selector').value;
+    const count = parseInt(document.getElementById('editItem_count').value) || 1;
+    if (!itemId) { showToast('⚠️ 请择一宝物'); return; }
+    if (!_editUserItems[cat]) _editUserItems[cat] = {};
+    _editUserItems[cat][itemId] = (_editUserItems[cat][itemId] || 0) + count;
+    renderEditUserItems();
+    document.getElementById('editItem_selector').value = '';
+    document.getElementById('editItem_count').value = '1';
+  }
+
+  function removeEditItem(cat, itemId) {
+    if (_editUserItems[cat]) {
+      delete _editUserItems[cat][itemId];
+      if (Object.keys(_editUserItems[cat]).length === 0) delete _editUserItems[cat];
+    }
+    renderEditUserItems();
+  }
+
+  function renderEditUserItems() {
+    const container = document.getElementById('editUserItems');
+    const entries = Object.entries(_editUserItems).flatMap(([cat, ids]) =>
+      Object.entries(ids).filter(([, c]) => c > 0).map(([id, c]) => ({ cat, id, c }))
+    );
+    if (!entries.length) {
+      container.innerHTML = '';
+      return;
+    }
+    container.innerHTML = '<div class="items-tags">' + entries.map(e =>
+      `<span class="item-tag">${CATEGORY_LABELS[e.cat]||e.cat}: ${e.id}${e.c > 1 ? ' ×'+e.c : ''} <span class="del" onclick="removeEditItem('${e.cat}','${e.id}')">✕</span></span>`
+    ).join('') + '</div>';
+  }
+
+  async function saveEditUser() {
+    if (_editTarget === null) return;
+    const u = _users[_editTarget];
+    if (!u) return;
+    const updates = {
+      room_id: u.room_id,
+      realm_idx: parseInt(document.getElementById('edit_realmIdx').value) || 0,
+      spirit_stones: parseInt(document.getElementById('edit_stones').value) || 0,
+      exp_pool: parseInt(document.getElementById('edit_exp').value) || 0,
+      items: _editUserItems,
+    };
+    const data = await api('PUT', `/api/plugins/cultivation/users/${u.wxid}`, updates);
+    if (data?.success) { showToast('✅ 天机已改'); closeEditUser(); loadUsers(); }
+  }
+
+  // ============================================================
+  // 废黜 — Delete User
+  // ============================================================
+  async function deleteUser(idx) {
+    const u = _users[idx];
+    if (!u || !confirm(`确定要废黜 ${u.display_name || u.wxid} 的道基吗？`)) return;
+    const data = await api('DELETE', `/api/plugins/cultivation/users/${u.wxid}`, { room_id: u.room_id });
+    if (data?.success) { showToast('✅ 道基已毁'); loadUsers(); }
+  }
+
+  // ============================================================
+  // 珍宝阁 — Shop Config
+  // ============================================================
+  async function loadShopConfig() {
+    const data = await api('GET', '/api/plugins/cultivation/config');
+    if (!data) return;
+    _shopItems = data.shop || [];
+    renderShopItems();
+  }
+
+  function renderShopItems() {
+    const container = document.getElementById('shopItemList');
+    if (!_shopItems.length) {
+      container.innerHTML = '<div style="text-align:center;padding:24px;color:rgba(160,160,192,0.3)">珍宝阁空无一物</div>';
+      return;
+    }
+    const typeIcons = { equipment: '⚔', pet: '🐉', technique: '📜', consumable: '⚡' };
+    container.innerHTML = '<div class="shop-grid">' + _shopItems.map((item, i) =>
+      `<div class="shop-card">
+        <div class="shop-card-info">
+          <div class="shop-card-name">${typeIcons[item.type] || '📦'} ${item.id}</div>
+          <div class="shop-card-meta">
+            <span class="price">💎 ${item.price}</span>
+            <span class="type-badge">${item.type}</span>
+            ${item.passive ? `<span class="type-badge">✨${item.passive}</span>` : ''}
+            ${item.desc ? `<span style="margin-left:6px">${item.desc}</span>` : ''}
+          </div>
+        </div>
+        <button class="btn btn-danger btn-xs" onclick="removeShopItem(${i})">✕</button>
+      </div>`
+    ).join('') + '</div>';
+  }
+
+  function showAddShopItem() {
+    ['shop_name', 'shop_desc'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('shop_type').value = 'equipment';
+    document.getElementById('shop_price').value = '100';
+    document.getElementById('shop_passive').value = '';
+    document.getElementById('shop_passiveVal').value = '0';
+    document.getElementById('addShopModal').style.display = 'flex';
+  }
+
+  function closeAddShop() { document.getElementById('addShopModal').style.display = 'none'; }
+
+  function confirmAddShopItem() {
+    const name = document.getElementById('shop_name').value.trim();
+    if (!name) { showToast('⚠️ 请填宝物名'); return; }
+    _shopItems.push({
+      id: name,
+      type: document.getElementById('shop_type').value,
+      price: parseInt(document.getElementById('shop_price').value) || 100,
+      desc: document.getElementById('shop_desc').value.trim(),
+      passive: document.getElementById('shop_passive').value,
+      passiveVal: parseFloat(document.getElementById('shop_passiveVal').value) || 0,
+    });
+    renderShopItems();
+    closeAddShop();
+    showToast('✅ 已列入珍宝阁，记得保存');
+  }
+
+  function removeShopItem(idx) { _shopItems.splice(idx, 1); renderShopItems(); showToast('✅ 已移除，记得保存'); }
+
+  async function saveShopConfig() {
+    const data = await api('PUT', '/api/plugins/cultivation/config/shop', { items: _shopItems });
+    if (data?.success) showToast('✅ 珍宝阁已载入灵玺');
+  }
+
+  // ============================================================
+  // 丹方集 — Pills Config
+  // ============================================================
+  async function loadPillsConfig() {
+    const data = await api('GET', '/api/plugins/cultivation/config');
+    if (!data) return;
+    _pills = data.pills || {};
+    renderPills();
+  }
+
+  function renderPills() {
+    const container = document.getElementById('pillsList');
+    const entries = Object.entries(_pills);
+    if (!entries.length) {
+      container.innerHTML = '<div style="text-align:center;padding:24px;color:rgba(160,160,192,0.3)">丹方集空无一物</div>';
+      return;
+    }
+    container.innerHTML = '<div class="shop-grid">' + entries.map(([name, info]) =>
+      `<div class="shop-card">
+        <div class="shop-card-info">
+          <div class="shop-card-name">💊 ${name}</div>
+          <div class="shop-card-meta">
+            <span class="price">💎 ${info.cost}</span>
+            <span class="type-badge">+${(info.bonus * 100).toFixed(0)}%</span>
+            ${info.desc ? `<span style="margin-left:6px">${info.desc}</span>` : ''}
+          </div>
+        </div>
+        <button class="btn btn-danger btn-xs" onclick="removePill('${name}')">✕</button>
+      </div>`
+    ).join('') + '</div>';
+  }
+
+  function showAddPill() {
+    ['pill_name', 'pill_desc'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('pill_cost').value = '10';
+    document.getElementById('pill_bonus').value = '0.10';
+    document.getElementById('addPillModal').style.display = 'flex';
+  }
+
+  function closeAddPill() { document.getElementById('addPillModal').style.display = 'none'; }
+
+  function confirmAddPill() {
+    const name = document.getElementById('pill_name').value.trim();
+    if (!name) { showToast('⚠️ 请填丹名'); return; }
+    _pills[name] = {
+      cost: parseInt(document.getElementById('pill_cost').value) || 10,
+      bonus: parseFloat(document.getElementById('pill_bonus').value) || 0.10,
+      desc: document.getElementById('pill_desc').value.trim(),
+    };
+    renderPills();
+    closeAddPill();
+    showToast('✅ 已载入丹方集，记得保存');
+  }
+
+  function removePill(name) { delete _pills[name]; renderPills(); showToast('✅ 已移除，记得保存'); }
+
+  async function savePillsConfig() {
+    const data = await api('PUT', '/api/plugins/cultivation/config/pills', { pills: _pills });
+    if (data?.success) showToast('✅ 丹方集已载入灵玺');
+  }
+
+  // ---- Init ----
+  loadRooms();
+</script>
+</body>
+</html>

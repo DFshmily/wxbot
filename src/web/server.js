@@ -6,6 +6,9 @@ import statusRouter, { captureLogs } from './routes/status.js';
 import configRouter from './routes/config.js';
 import controlRouter from './routes/control.js';
 import templatesRouter from './routes/templates.js';
+import keywordsRouter from './routes/keywords.js';
+import pluginsRouter from './routes/plugins.js';
+import cultivationAdminRouter from './routes/cultivation-admin.js';
 import config from '../config.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -47,6 +50,9 @@ export function startWebServer() {
   app.use('/api/config', authMiddleware, configRouter);
   app.use('/api/control', authMiddleware, controlRouter);
   app.use('/api/templates', authMiddleware, templatesRouter);
+  app.use('/api/keywords', authMiddleware, keywordsRouter);
+  app.use('/api/plugins', authMiddleware, pluginsRouter);
+  app.use('/api/plugins/cultivation', authMiddleware, cultivationAdminRouter);
 
   // Catch-all for SPA
   app.get('*', (req, res) => {

@@ -61,7 +61,7 @@ router.put('/', (req, res) => {
   const updatedKeys = [];
   const errors = [];
 
-  for (const [key, value] of Object.entries(updates)) {
+  for (let [key, value] of Object.entries(updates)) {
     const upperKey = key.toUpperCase();
     if (!allowedKeys.includes(upperKey)) {
       errors.push(`Key not allowed: ${key}`);
@@ -76,6 +76,11 @@ router.put('/', (req, res) => {
         errors.push(`Invalid numeric value for ${key}: ${value}`);
         continue;
       }
+    }
+
+    // Force LLM model name to lowercase (API is case-sensitive)
+    if (upperKey === 'LLM_MODEL' && typeof value === 'string') {
+      value = value.toLowerCase();
     }
 
     // Update or add the key
@@ -165,7 +170,7 @@ function applyHotReload(key, value) {
     case 'SUMMARY_CRON': config.summary.cron = value; break;
     case 'LLM_API_KEY': config.llm.apiKey = value; break;
     case 'LLM_BASE_URL': config.llm.baseURL = value; break;
-    case 'LLM_MODEL': config.llm.model = value; break;
+    case 'LLM_MODEL': config.llm.model = value.toLowerCase(); break;
   }
 }
 

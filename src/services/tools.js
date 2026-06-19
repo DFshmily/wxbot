@@ -1,6 +1,16 @@
 import { chat } from './deepseek.js';
 import { getRecentSpeakers } from '../database/queries.js';
 import wechat from './wechatferry.js';
+import path from 'path';
+import fs from 'fs';
+
+const DATA_DIR = path.resolve('data/generated');
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+
+/** Generate a public QR code URL (works without wechatferry sendImage) */
+function getQRCodeUrl(text) {
+  return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(text)}`;
+}
 
 // ============================================================
 // Cheesy pick-up lines pool (no API cost)
@@ -227,4 +237,115 @@ export async function getHistoryToday() {
   } catch {
     return '📅 获取历史信息失败，请稍后重试。';
   }
+}
+
+// ============================================================
+// 热搜榜 — 微博热搜（模拟，用 DeepSeek 实时搜索）
+// ============================================================
+export async function getHotSearch() {
+  try {
+    const result = await chat(
+      '列出今天中国互联网上最热门的前10条热搜话题（微博/知乎/百度综合），每条一句话概括，20字以内。带上序号。',
+      '你是一个热点资讯助手，了解最新网络热搜。只输出编号列表，不要额外说明。'
+    );
+    return `🔥 今日热搜\n━━━━━━━━━━\n${result || '获取热搜失败，稍后再试。'}`;
+  } catch {
+    return '🔥 获取热搜失败，请稍后重试。';
+  }
+}
+
+// ============================================================
+// 星座运势 — AI 生成
+// ============================================================
+export async function getHoroscope(sign) {
+  const validSigns = ['白羊', '金牛', '双子', '巨蟹', '狮子', '处女', '天秤', '天蝎', '射手', '摩羯', '水瓶', '双鱼'];
+  if (!sign || !validSigns.some(s => sign.includes(s))) {
+    return '请提供正确的星座名称，如"查星座 天蝎座"。';
+  }
+  try {
+    const result = await chat(
+      `请为${sign}生成今日运势，包含：综合运势、幸运数字、幸运颜色、爱情运、事业运、财运、健康运、今日建议。用有趣轻松的语气。`,
+      '你是一个星座运势助手。每次生成不同的随机运势。输出格式简洁。'
+    );
+    return `🔮 ${sign}今日运势\n${result}`;
+  } catch {
+    return '🔮 运势生成失败，请稍后重试。';
+  }
+}
+
+// ============================================================
+// 菜谱查询 — AI 生成
+// ============================================================
+export async function getRecipe(dish) {
+  if (!dish) return '请提供菜名，如"菜谱 红烧肉"。';
+  try {
+    const result = await chat(
+      `请提供"${dish}"的详细做法，包含：所需食材（分量）、烹饪步骤（简洁明了）、预计时长。控制在200字以内。`,
+      '你是一个美食烹饪助手。给出实用可操作的食谱。'
+    );
+    return `🍳 ${dish}的做法\n${result}`;
+  } catch {
+    return `🍳 获取${dish}的做法失败，请稍后重试。`;
+  }
+}
+
+// ============================================================
+// 宠物生成器 — 随机猫/狗图片（发送图片）
+// ============================================================
+export async function getPetImage(type) {
+  const url = type === '猫' || type === 'cat'
+    ? 'https://api.thecatapi.com/v1/images/search'
+    : 'https://dog.ceo/api/breeds/image/random';
+
+  try {
+    const resp = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    const data = await resp.json();
+    const imageUrl = Array.isArray(data) ? data[0]?.url : data?.message;
+
+    if (!imageUrl) {
+      return `🐱 来张${type || '宠物'}图？暂时没找到，试试别的吧~`;
+    }
+
+    return `🐱 随机${type || '宠物'} 🐱\n${imageUrl}`;
+  } catch {
+    return `🐱 随机${type || '宠物'}获取失败，请稍后重试。`;
+  }
+}
+
+// ============================================================
+// 表情包搜索 — 本地搞笑梗（文本），实际可集成图库API
+// ============================================================
+export async function getMeme(query) {
+  if (!query) {
+    const memes = [
+      '🤣 你永远叫不醒一个装睡的人，但是你可以关掉他的空调。',
+      '😂 我这不是胖，我是对生活的宽容。',
+      '😅 每次我想放弃的时候，我就告诉自己：再坚持一下，然后就真的放弃了。',
+      '🤪 我一直以为我是一匹狼，结果后来发现我只是一只哈士奇。',
+      '😏 别跟我谈理想，我的理想就是不上班。',
+      '😭 我最大的缺点就是没有缺点，这让我很烦恼。',
+      '🤯 本来想给你一个惊喜，结果惊喜变成了惊吓。',
+      '😎 不是我喜欢熬夜，而是黑夜需要我这盏明灯。',
+    ];
+    return memes[Math.floor(Math.random() * memes.length)];
+  }
+
+  try {
+    const result = await chat(
+      `生成一个关于"${query}"的搞笑段子或表情包文案，控制在50字以内，要有梗。`,
+      '你是一个段子手，输出有趣搞笑的段子，风格多样化。'
+    );
+    return `😂 ${query}版表情包\n${result}`;
+  } catch {
+    return '😂 表情包生成失败，让我静静。';
+  }
+}
+
+// ============================================================
+// 二维码生成 — 输出图片
+// ============================================================
+export async function generateQRCode(text) {
+  if (!text) return '请提供要生成二维码的内容，如"二维码 https://xxx.com"。';
+  const qrUrl = getQRCodeUrl(text);
+  return `📱 二维码\n内容: ${text}\n点此查看: ${qrUrl}`;
 }

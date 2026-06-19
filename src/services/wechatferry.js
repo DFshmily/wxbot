@@ -145,11 +145,46 @@ class WeChatService {
     }
   }
 
+  /** Welcome new members who join the group */
+  handleNewMember(roomId, msgContent) {
+    // Detect join patterns: "xxx invited yyy to the group" or "yyy joined the group"
+    const patterns = [
+      /邀请(.+)加入了群聊/,
+      /邀请(.+)加入了群/,
+      /(.+)通过扫描(.+)二维码加入群聊/,
+      /"(.+)"通过分享的卡片加入群聊/,
+    ];
+
+    for (const pattern of patterns) {
+      const match = msgContent.match(pattern);
+      if (match) {
+        const newMember = match[1].trim();
+        const welcomes = [
+          `🎉 欢迎 @${newMember} 加入群聊！请先看群公告，不要发广告哦~`,
+          `👋 嗨 @${newMember}，欢迎入群！发个红包让大家认识一下？🤣`,
+          `🎊 欢迎 @${newMember}！这里是个有爱的群，请多指教~`,
+          `🥳 欢迎 @${newMember} 加入！请先做个自我介绍吧！`,
+          `🌸 欢迎新朋友 @${newMember}！有什么问题尽管@机器人~`,
+        ];
+        const welcome = welcomes[Math.floor(Math.random() * welcomes.length)];
+        messageQueue.enqueue(roomId, welcome);
+        return true;
+      }
+    }
+    return false;
+  }
+
   onMessage(msg) {
     if (!msg.roomid) return;
     if (!msg.content) return;
 
     logWithTime('MSG', `sender=${msg.sender} type=${msg.type} content=${msg.content.slice(0, 80)}`);
+
+    // Check for new member welcome (system messages with join text)
+    if (msg.type === 10000 || msg.type === 10002) {
+      this.handleNewMember(msg.roomid, msg.content);
+      // Don't return — system messages might also contain other info
+    }
 
     // Track this group and cache sender (if not already cached, keep sender as-is)
     if (msg.roomid) this.groups.add(msg.roomid);

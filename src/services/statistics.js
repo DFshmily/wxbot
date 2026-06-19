@@ -8,35 +8,28 @@ import wechat from './wechatferry.js';
 
 // Common Chinese stop words to filter out of word frequency
 const STOP_WORDS = new Set([
-  '的', '了', '是', '在', '我', '有', '和', '就', '不', '人', '都',
-  '一', '一个', '上', '也', '很', '到', '说', '要', '去', '你',
-  '会', '着', '没有', '看', '好', '自己', '这', '他', '她', '它',
-  '们', '那', '啊', '吧', '吗', '呢', '哈', '嗯', '哦', '喔',
-  '对', '把', '被', '让', '给', '跟', '与', '从', '向', '在',
-  '以', '为', '于', '之', '而', '所', '如', '将', '又', '还',
-  '已', '已经', '才', '刚', '刚刚', '正在', '可以', '能', '做',
-  '来', '去', '出', '进', '回', '到', '过', '开', '打', '拿',
-  '吃', '喝', '玩', '什么', '怎么', '为什么', '这个', '那个',
+  // Common bigrams
+  '一个', '没有', '什么', '怎么', '为什么', '这个', '那个',
   '这些', '那些', '这样', '那样', '这么', '那么', '非常',
-  '太', '很', '更', '最', '比较', '还是', '还是', '就是', '但是',
-  '可是', '然而', '不过', '虽然', '因为', '所以', '如果', '然后',
-  '关于', '对于', '根据', '按照', '通过', '经过', '比如', '例如',
-  '是的', '好的', '收到', '嗯嗯', '哈哈', '呵呵', '嘿嘿',
+  '比较', '还是', '就是', '但是', '可以', '已经', '正在',
+  '刚刚', '可能', '应该', '需要', '知道', '觉得', '认为',
+  '可是', '然而', '不过', '虽然', '因为', '所以', '如果',
+  '然后', '关于', '对于', '根据', '按照', '通过', '经过',
+  '比如', '例如', '是的', '好的', '收到', '嗯嗯', '哈哈',
+  '呵呵', '嘿嘿', '我们', '你们', '他们', '她们', '它们',
+  '自己', '什么', '这里', '那里', '现在', '已经', '可以',
+  '不是', '不会', '不能', '不要', '没有', '这样', '那样',
 ]);
 
 function extractWords(text) {
-  // Extract Chinese word bigrams and single characters
+  // Extract Chinese word bigrams only (no single characters)
   const chars = text.replace(/[^一-鿿]/g, '');
   if (!chars) return [];
 
   const words = [];
-  // Bigrams
+  // Bigrams only
   for (let i = 0; i < chars.length - 1; i++) {
     words.push(chars.slice(i, i + 2));
-  }
-  // Single characters for remaining
-  for (const c of chars) {
-    words.push(c);
   }
   return words;
 }
@@ -47,7 +40,7 @@ function getWordFrequency(messages, topN = 10) {
   for (const msg of messages) {
     const words = extractWords(msg.content);
     for (const w of words) {
-      if (w.length >= 2 || (w.length === 1 && !STOP_WORDS.has(w))) {
+      if (!STOP_WORDS.has(w)) {
         freq[w] = (freq[w] || 0) + 1;
       }
     }

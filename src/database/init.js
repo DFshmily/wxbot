@@ -131,6 +131,124 @@ db.exec(`
     content TEXT NOT NULL,
     updated_at TEXT DEFAULT (datetime('now','localtime'))
   );
+
+  -- 签到打卡
+  CREATE TABLE IF NOT EXISTS checkins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    room_id TEXT NOT NULL,
+    wxid TEXT NOT NULL,
+    checkin_date TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now','localtime')),
+    UNIQUE(room_id, wxid, checkin_date)
+  );
+  CREATE INDEX IF NOT EXISTS idx_checkins_room ON checkins(room_id, checkin_date);
+
+  -- 自定义关键词回复
+  CREATE TABLE IF NOT EXISTS keywords (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    room_id TEXT NOT NULL DEFAULT '*',
+    keyword TEXT NOT NULL,
+    reply TEXT NOT NULL,
+    match_type TEXT NOT NULL DEFAULT 'exact',
+    enabled INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now','localtime')),
+    UNIQUE(room_id, keyword)
+  );
+  CREATE INDEX IF NOT EXISTS idx_keywords ON keywords(room_id, keyword);
+
+  -- AI对话上下文记忆
+  CREATE TABLE IF NOT EXISTS conversations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    room_id TEXT NOT NULL,
+    sender TEXT NOT NULL,
+    role TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now','localtime'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_conversations ON conversations(room_id, sender, created_at);
+
+  -- 群成员等级
+  CREATE TABLE IF NOT EXISTS user_levels (
+    room_id TEXT NOT NULL,
+    wxid TEXT NOT NULL,
+    total_messages INTEGER NOT NULL DEFAULT 1,
+    total_days INTEGER NOT NULL DEFAULT 1,
+    last_active TEXT DEFAULT (datetime('now','localtime')),
+    PRIMARY KEY (room_id, wxid)
+  );
+
+  -- 数据库版本管理
+  CREATE TABLE IF NOT EXISTS schema_version (
+    version INTEGER PRIMARY KEY,
+    applied_at TEXT DEFAULT (datetime('now','localtime'))
+  );
 `);
+
+// ===== 数据库迁移 =====
+const CURRENT_VERSION = 7;
+
+const versionRow = db.prepare('SELECT MAX(version) as v FROM schema_version').get();
+const dbVersion = versionRow?.v || 0;
+
+if (dbVersion < CURRENT_VERSION) {
+  console.log(`[DB] Migrating from v${dbVersion} to v${CURRENT_VERSION}...`);
+
+  // v7: Clean up — update help template to core-only (plugin handles 修仙 commands)
+  if (dbVersion < 7) {
+    const newHelp = `📖 可用功能
+━━━━━━━━━━━━━━
+🗣 @{botname} 提问 — AI对话（含记忆）
+━━━ 签到 ━━━
+✅ 签到 — 每日打卡
+📋 签到排行 — 签到排名
+━━━ 工具 ━━━
+🌤 天气 <城市> — 查天气
+🔤 翻译 <文本> — 中英互译
+🔥 热搜 — 今日热搜榜
+🔮 查星座 <星座> — 星座运势
+🍳 菜谱 <菜名> — 美食做法
+📱 二维码 <内容> — 生成二维码
+━━━ 娱乐 ━━━
+😂 讲个笑话
+🔮 今天运势
+💕 土味情话
+🎯 抽签 / 抽奖
+🧃 毒鸡汤 — 扎心语录
+😵 绕口令 — 挑战口条
+🎯 真心话 / 大冒险
+📜 藏头诗 <字> — AI藏头诗
+💥 今日梗图 — 每日一梗
+━━━ 游戏 ━━━
+🎮 猜数字 — 猜数字游戏
+🎮 成语接龙
+🎭 谁是卧底 / 卧底 — 身份推理
+🎯 猜词 — 猜词游戏
+━━━ 群聊 ━━━
+📊 群统计
+📊 高频词
+📋 今日总结
+📋 昨天说了什么
+🔍 搜索 <关键词>
+━━━ 资讯 ━━━
+📰 新闻
+📅 历史上的今天
+━━━ 账户 ━━━
+💰 余额
+📊 用量
+━━━ 其他 ━━━
+🧹 清除记忆 — 抹去因果`;
+
+    const stmt = db.prepare(`
+      INSERT INTO templates (key, content, updated_at) VALUES ('help', ?, datetime('now','localtime'))
+      ON CONFLICT(key) DO UPDATE SET content = excluded.content, updated_at = excluded.updated_at
+    `);
+    stmt.run(newHelp);
+  }
+
+  // Record migration
+  const migrateStmt = db.prepare('INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (?, datetime(\'now\',\'localtime\'))');
+  migrateStmt.run(CURRENT_VERSION);
+  console.log(`[DB] Migration to v${CURRENT_VERSION} complete`);
+}
 
 export default db;

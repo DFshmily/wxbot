@@ -48,6 +48,9 @@
     .btn-danger:hover { background: #c0392b; }
     .btn-warning { background: #f39c12; color: white; }
     .btn-warning:hover { background: #e67e22; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; border-radius: 6px; }
+    .btn-outline { background: transparent; border: 1px solid #07c160; color: #07c160; }
+    .btn-outline:hover { background: #07c160; color: white; }
     .btn-group { display: flex; gap: 8px; margin-top: 16px; }
 
     /* Config form */
@@ -139,6 +142,53 @@
       <div class="config-form" id="configForm">加载中...</div>
       <div class="btn-group">
         <button class="btn btn-primary" onclick="saveConfig()">保存配置</button>
+      </div>
+    </div>
+
+    <!-- Plugin Management -->
+    <div class="card" style="margin-bottom:20px">
+      <h3><span class="icon">🧩</span> 插件管理</h3>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:end">
+        <div class="form-group" style="flex:1;min-width:280px">
+          <label>群隔离设置（选择群=按群控制，不选=全局）</label>
+          <select id="pluginRoomFilter" onchange="onRoomSelectChange()" style="padding:8px;width:100%">
+            <option value="">🌐 全局设置</option>
+          </select>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="clearRoomPlugins()">全局</button>
+        <span id="pluginRoomLabel" style="font-size:12px;color:#888;display:none"></span>
+      </div>
+      <div id="pluginList">加载中...</div>
+    </div>
+
+    <!-- Keyword Auto Reply -->
+    <div class="card" style="margin-bottom:20px">
+      <h3><span class="icon">🤖</span> 关键词自动回复</h3>
+      <div class="config-form">
+        <div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:8px">
+          <div class="form-group">
+            <label>关键词</label>
+            <input id="kw_keyword" placeholder="输入关键词">
+          </div>
+          <div class="form-group">
+            <label>匹配方式</label>
+            <select id="kw_matchType">
+              <option value="exact">精确匹配</option>
+              <option value="contains">包含</option>
+              <option value="startswith">开头匹配</option>
+              <option value="regex">正则</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>回复内容</label>
+            <input id="kw_reply" placeholder="自动回复的内容">
+          </div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="addKeyword()">添加规则</button>
+          <button class="btn btn-warning" onclick="loadKeywords()">刷新列表</button>
+        </div>
+        <div id="keywordList" style="margin-top:8px;font-size:13px;color:#666">加载中...</div>
       </div>
     </div>
 
@@ -243,6 +293,9 @@
       await loadConfig();
       await loadTemplate();
       await refreshLogs();
+      await loadKeywords();
+      await loadGroupSelect();
+      await loadPlugins();
     }
 
     async function refreshStatus() {
@@ -356,7 +409,7 @@
     async function saveConfig() {
       const updates = {
         llm_provider: document.getElementById('cfg_provider').value,
-        llm_model: document.getElementById('cfg_model').value,
+        llm_model: document.getElementById('cfg_model').value.toLowerCase(),
         llm_base_url: document.getElementById('cfg_baseUrl').value,
         max_msg_per_hour: document.getElementById('cfg_maxHour').value,
         min_msg_interval: document.getElementById('cfg_minInterval').value,
@@ -523,6 +576,145 @@
         showToast('✅ 已恢复默认模板');
         loadTemplate();
       }
+    }
+
+    // ===== 插件管理 =====
+
+    let _pluginRoomId = '';
+
+    async function loadGroupSelect() {
+      const data = await api('GET', '/api/status/groups');
+      if (!data) return;
+      const select = document.getElementById('pluginRoomFilter');
+      // Keep the first "全局" option
+      select.innerHTML = '<option value="">🌐 全局设置</option>';
+      // Add group options with display names
+      for (const g of data.groups || []) {
+        const opt = document.createElement('option');
+        opt.value = g.roomId;
+        const name = g.displayName || g.roomId;
+        opt.textContent = name;
+        select.appendChild(opt);
+      }
+    }
+
+    function onRoomSelectChange() {
+      _pluginRoomId = document.getElementById('pluginRoomFilter').value;
+      const label = document.getElementById('pluginRoomLabel');
+      if (_pluginRoomId) {
+        label.textContent = `群: ${_pluginRoomId}`;
+        label.style.display = 'inline';
+      } else {
+        label.style.display = 'none';
+      }
+      loadPlugins();
+    }
+
+    function clearRoomPlugins() {
+      document.getElementById('pluginRoomFilter').value = '';
+      _pluginRoomId = '';
+      document.getElementById('pluginRoomLabel').style.display = 'none';
+      loadPlugins();
+    }
+
+    function getPluginApiPath(name) {
+      if (_pluginRoomId) {
+        return { path: `/api/plugins/${encodeURIComponent(name)}/rooms/${encodeURIComponent(_pluginRoomId)}/toggle`, mode: 'room' };
+      }
+      return { path: `/api/plugins/${encodeURIComponent(name)}/toggle`, mode: 'global' };
+    }
+
+    async function loadPlugins() {
+      const url = _pluginRoomId ? `/api/plugins/rooms/${encodeURIComponent(_pluginRoomId)}` : '/api/plugins';
+      const data = await api('GET', url);
+      if (!data) return;
+      const plugins = data.plugins || data;
+      const container = document.getElementById('pluginList');
+      if (!plugins.length) {
+        container.innerHTML = '暂无插件。';
+        return;
+      }
+      container.innerHTML = plugins.map(p => {
+        const isCultivation = p.name.includes('凡人') || p.name.includes('修仙');
+        return `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0">
+          <div style="flex:1">
+            <strong>${p.name}</strong> <span style="color:#888;font-size:12px">v${p.version}</span>
+            <span style="font-size:11px;color:#888;background:#f0f0f0;padding:1px 6px;border-radius:4px;margin-left:4px">${_pluginRoomId ? '群' : '全局'}</span>
+            <div style="font-size:13px;color:#666">${p.description || ''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            ${isCultivation ? `<button class="btn btn-primary btn-sm" onclick="window.open('/cultivation-admin.html','_blank')">管理</button>` : ''}
+            <button class="btn btn-danger btn-sm" onclick="uninstallPlugin('${p.name}')">卸载</button>
+            <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+              <input type="checkbox" ${p.enabled ? 'checked' : ''} onchange="togglePlugin('${p.name}', this.checked)" style="opacity:0;width:0;height:0">
+              <span style="position:absolute;inset:0;background:${p.enabled ? '#07c160' : '#ccc'};border-radius:12px;transition:0.3s">
+                <span style="position:absolute;top:2px;${p.enabled ? 'right:2px;left:24px' : 'left:2px;right:24px'};height:20px;background:white;border-radius:50%;transition:0.3s"></span>
+              </span>
+            </label>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    async function togglePlugin(name, enabled) {
+      let url;
+      if (_pluginRoomId) {
+        url = `/api/plugins/${encodeURIComponent(name)}/rooms/${encodeURIComponent(_pluginRoomId)}/toggle`;
+      } else {
+        url = `/api/plugins/${encodeURIComponent(name)}/toggle`;
+      }
+      const data = await api('POST', url, { enabled });
+      if (data) showToast(data.message || `✅ ${name} ${enabled ? '已启用' : '已禁用'}`);
+    }
+
+    async function uninstallPlugin(name) {
+      if (!confirm(`确定要卸载插件「${name}」吗？\n卸载后需要重启服务才能重新加载。`)) return;
+      const data = await api('POST', `/api/plugins/${encodeURIComponent(name)}/uninstall`);
+      if (data?.success) {
+        showToast(`✅ ${data.message}`);
+        loadPlugins();
+      } else if (data?.error) {
+        showToast(`⚠️ ${data.error}`);
+      }
+    }
+
+    // ===== 关键词管理 =====
+
+    async function loadKeywords() {
+      const data = await api('GET', '/api/keywords');
+      if (!data) return;
+      const container = document.getElementById('keywordList');
+      if (!data.length) {
+        container.innerHTML = '暂无关键词规则，添加一条试试。';
+        return;
+      }
+      container.innerHTML = data.map(r =>
+        `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #f0f0f0">
+          <span><strong>${r.keyword}</strong> (${r.match_type}) → ${r.reply.slice(0, 30)}${r.reply.length > 30 ? '...' : ''}</span>
+          <button class="btn btn-danger" style="padding:2px 8px;font-size:12px" onclick="deleteKeyword(${r.id})">删除</button>
+        </div>`
+      ).join('');
+    }
+
+    async function addKeyword() {
+      const keyword = document.getElementById('kw_keyword').value.trim();
+      const reply = document.getElementById('kw_reply').value.trim();
+      const matchType = document.getElementById('kw_matchType').value;
+      if (!keyword || !reply) { showToast('⚠️ 请填写关键词和回复'); return; }
+      const data = await api('POST', '/api/keywords', { keyword, reply, match_type: matchType });
+      if (data) {
+        showToast('✅ 规则已添加');
+        document.getElementById('kw_keyword').value = '';
+        document.getElementById('kw_reply').value = '';
+        loadKeywords();
+      }
+    }
+
+    async function deleteKeyword(id) {
+      if (!confirm('确定删除这条规则？')) return;
+      const data = await api('DELETE', `/api/keywords/${id}`);
+      if (data) { showToast('✅ 已删除'); loadKeywords(); }
     }
 
     // Enter key for login

@@ -1,6 +1,6 @@
 {
   "name": "wxbot",
-  "version": "1.2.3",
+  "version": "1.4.0",
   "description": "微信群AI机器人系统",
   "main": "src/index.js",
   "type": "module",

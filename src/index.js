@@ -5,6 +5,7 @@ import watchdog from './services/watchdog.js';
 import { scheduledSummary } from './handlers/summary.js';
 import { startWebServer } from './web/server.js';
 import config from './config.js';
+import pluginManager from './plugins/manager.js';
 
 /**
  * 微信群AI机器人系统 — Entry point
@@ -30,6 +31,9 @@ async function main() {
   console.log(`Summary cron: ${config.summary.cron}`);
   console.log(`Web port: ${config.web.port}`);
   console.log('');
+
+  // Load plugins
+  await pluginManager.loadAll();
 
   // Connect to WeChat via WeChatFerry (with retry)
   await wechat.connect();
